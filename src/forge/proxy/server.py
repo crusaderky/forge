@@ -218,7 +218,10 @@ class HTTPServer:
                     writer, method, path, query, body_bytes, headers,
                     sse=_PASSTHROUGH_ROUTES[(method, path)],
                 )
-            elif method == "POST" and path == "/v1/chat/completions":
+            elif method == "POST" and path in ("/v1/chat/completions", "/chat/completions"):
+                # llama.cpp serves the OpenAI chat endpoint on both spellings;
+                # llama.cpp-native clients (pi-llama-cpp) POST the unprefixed
+                # one, so a transparent front must accept it too.
                 await self._handle_completions(
                     writer, body_bytes, protocol="openai", headers=headers,
                 )

@@ -658,6 +658,23 @@ class TestStreamingErrorStatus:
             await srv.stop()
 
 
+class TestChatCompletionsAlias:
+    """POST /chat/completions (no /v1 prefix) is served like the canonical
+    route — llama.cpp serves both spellings and llama.cpp-native clients
+    (pi-llama-cpp) POST the unprefixed one."""
+
+    @pytest.mark.asyncio
+    async def test_unprefixed_chat_completions_routes(self, server_factory):
+        srv, port = await server_factory(TextResponse(content="Hello!"))
+        body = {"messages": [{"role": "user", "content": "hi"}]}
+        status, response_body = await _http_request(
+            port, "POST", "/chat/completions", body,
+        )
+        assert status == 200
+        data = json.loads(response_body)
+        assert data["choices"][0]["message"]["content"] == "Hello!"
+
+
 # ── Verbatim passthrough (llama.cpp-native surface + /v1/models) ──
 
 
